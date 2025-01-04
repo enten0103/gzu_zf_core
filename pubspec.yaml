@@ -1,0 +1,17 @@
+name: gzu_zf_core
+description: 正方教务系统解析实现.
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  dio: ^5.7.0
+  html: ^0.15.5
+  image: ^4.5.2
+  fast_gbk: ^1.0.0
+  path: ^1.9.0
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.24.0
