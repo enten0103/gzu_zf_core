@@ -75,4 +75,12 @@ void main() {
       expect((result["scoreRows"] as List).length, isNonZero);
     });
   });
+
+  group("选课查询测试", () {
+    test("基础测试", () async {
+      var impl = ZfImpl.getImpl("2100170007", "wang.147");
+      await impl.login();
+      await impl.queryAllCourse();
+    });
+  });
 }
