@@ -1,4 +1,6 @@
-class SelectCourse {
+import 'dart:convert';
+
+class Course {
   ///选课课号
   final String courseSelectionNumber;
 
@@ -32,7 +34,7 @@ class SelectCourse {
   ///教材
   final String textBook;
 
-  SelectCourse({
+  Course({
     required this.courseSelectionNumber,
     required this.courseCode,
     required this.courseName,
@@ -46,8 +48,8 @@ class SelectCourse {
     required this.textBook,
   });
 
-  factory SelectCourse.fromJson(Map<String, dynamic> json) {
-    return SelectCourse(
+  factory Course.fromJson(Map<String, dynamic> json) {
+    return Course(
       courseSelectionNumber: json['courseSelectionNumber'] as String,
       courseCode: json['courseCode'] as String,
       courseName: json['courseName'] as String,
@@ -60,6 +62,10 @@ class SelectCourse {
       classLocation: json['classLocation'] as String,
       textBook: json['textBook'] as String,
     );
+  }
+
+  String toJsonStr() {
+    return jsonEncode(toJson());
   }
 
   Map<String, dynamic> toJson() {

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class AccountInfo {
+class Account {
   ///学号
   final String studentNumber;
 
@@ -16,7 +16,7 @@ class AccountInfo {
   ///行政班
   final String administrativeClass;
 
-  AccountInfo(
+  Account(
       {required this.studentNumber,
       required this.name,
       required this.college,
@@ -33,9 +33,9 @@ class AccountInfo {
     });
   }
 
-  factory AccountInfo.fromJson(String jsonString) {
+  factory Account.fromJson(String jsonString) {
     Map<String, dynamic> json = jsonDecode(jsonString);
-    return AccountInfo(
+    return Account(
       studentNumber: json['studentNumber'],
       name: json['name'],
       college: json['college'],
@@ -44,8 +44,8 @@ class AccountInfo {
     );
   }
 
-  factory AccountInfo.fromMap(Map<String, dynamic> map) {
-    return AccountInfo(
+  factory Account.fromMap(Map<String, dynamic> map) {
+    return Account(
       studentNumber: map['studentNumber'],
       name: map['name'],
       college: map['college'],

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fast_gbk/fast_gbk.dart';
-import 'package:gzu_zf_core/src/entity/account_info.dart';
-import 'package:gzu_zf_core/src/entity/score_row.dart';
+import 'package:gzu_zf_core/src/entity/account.dart';
+import 'package:gzu_zf_core/src/entity/score.dart';
 import 'package:gzu_zf_core/src/exception/error.dart';
 import 'package:html/parser.dart';
 
@@ -84,7 +84,7 @@ class ScoreImpl {
 
       var courseInfos = splitList(courseInfo, 22);
       var scoreRows = courseInfos.map((rawCourse) {
-        return ScoreRow(
+        return Score(
             schoolYear: rawCourse[0],
             semester: rawCourse[1],
             courseCode: rawCourse[2],
@@ -102,7 +102,7 @@ class ScoreImpl {
             retakeMark: rawCourse[20],
             courseNameEnglish: rawCourse[21]);
       });
-      var accountInfo = AccountInfo(
+      var accountInfo = Account(
           studentNumber: baseInfo[1].split('：')[1],
           name: baseInfo[2].split('：')[1],
           college: baseInfo[3].split('：')[1],

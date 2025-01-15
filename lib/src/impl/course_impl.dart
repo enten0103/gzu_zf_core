@@ -2,20 +2,20 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:fast_gbk/fast_gbk.dart';
-import 'package:gzu_zf_core/gzu_zf_core.dart';
-import 'package:gzu_zf_core/src/entity/select_course.dart';
+import 'package:gzu_zf_core/src/entity/course.dart';
+import 'package:gzu_zf_core/src/exception/error.dart';
 import 'package:gzu_zf_core/src/tools/string_tool.dart';
 import 'package:html/parser.dart';
 
 ///对应页面“信息查询”->“选课查询”
 class CourseImpl {
   final Dio client;
-
   CourseImpl({required this.client});
 
-  Future<List<SelectCourse>> getAllSelectCourse(
+  Future<List<Course>> getAllSelectCourse(
       String url, String referer, String username) async {
     var viewState = await firstQuest(url, referer);
+
     var years = genYears(username);
     List<Future<String>> futures = [];
     for (var i = 0; i < years.length; i++) {
@@ -24,7 +24,7 @@ class CourseImpl {
       futures.add(pageQuest(year, '2', viewState, url, referer));
     }
     var result = await Future.wait(futures);
-    List<SelectCourse> courses = [];
+    List<Course> courses = [];
     for (var i = 0; i < result.length; i++) {
       courses.addAll(rawparse(result[i]));
     }
@@ -91,7 +91,7 @@ class CourseImpl {
     }
   }
 
-  List<SelectCourse> rawparse(String raw) {
+  List<Course> rawparse(String raw) {
     var textDecode = utf8.decode(base64Decode(raw), allowMalformed: true);
     var textSplited = textDecode.split('<Text;>;l');
     var textlist = [];
@@ -122,7 +122,7 @@ class CourseImpl {
     }
     var textListSplited = splitList(textlist, 25, 1);
     var result = textListSplited.map((element) {
-      return SelectCourse(
+      return Course(
           courseSelectionNumber: element[0],
           courseCode: element[1],
           courseName: element[2],
@@ -156,7 +156,7 @@ class CourseImpl {
           dontEscape.contains(byte)) {
         return String.fromCharCode(byte);
       } else {
-        return '%' + byte.toRadixString(16).toUpperCase().padLeft(2, '0');
+        return '%${byte.toRadixString(16).toUpperCase().padLeft(2, '0')}';
       }
     }).join();
   }

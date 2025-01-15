@@ -218,12 +218,12 @@ class LoginImpl {
               if (code == null) return false;
               return code < 500;
             }));
-
     if (response.statusCode != 302) {
       if (response.statusCode == 200) {
         var resultText = parse(gbk.decode(response.data))
             .querySelector("#form1 > script")
             ?.innerHtml;
+        print(resultText);
         if (resultText == null) {
           throw LoginFailed();
         }

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class ScoreRow {
+class Score {
   ///学年
   final String schoolYear;
 
@@ -48,7 +48,7 @@ class ScoreRow {
 
   ///课程英文名
   final String courseNameEnglish;
-  ScoreRow(
+  Score(
       {required this.schoolYear,
       required this.semester,
       required this.courseCode,
@@ -88,8 +88,8 @@ class ScoreRow {
 
   String toJsonStr() => JsonEncoder().convert(toMap());
 
-  static ScoreRow fromMap(Map<String, dynamic> map) {
-    return ScoreRow(
+  static Score fromMap(Map<String, dynamic> map) {
+    return Score(
       schoolYear: map['schoolYear'],
       semester: map['semester'],
       courseCode: map['courseCode'],
@@ -112,7 +112,7 @@ class ScoreRow {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ScoreRow &&
+      other is Score &&
           runtimeType == other.runtimeType &&
           schoolYear == other.schoolYear &&
           semester == other.semester &&

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:gzu_zf_core/src/exception/error.dart';
 import 'package:gzu_zf_core/src/impl/course_impl.dart';
 import 'package:gzu_zf_core/src/impl/login_impl.dart';
@@ -40,8 +43,15 @@ class ZfImpl {
     return courseImpl.getAllSelectCourse(url, referer, _username);
   }
 
-  static ZfImpl getImpl(String username, String password) {
+  static ZfImpl getImpl(String username, String password, [String? proxy]) {
     var client = Dio();
+    (client.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      var c = HttpClient();
+      c.findProxy = (uri) {
+        return HttpClient.findProxyFromEnvironment(uri);
+      };
+      return c;
+    };
     client.interceptors.add(CookieInterceptor());
     client.options.connectTimeout = Duration(seconds: 10);
     client.options.headers['User-Agent'] =
