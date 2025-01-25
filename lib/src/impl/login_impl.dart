@@ -2,60 +2,44 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:gzu_zf_core/src/exception/error.dart';
 import 'package:gzu_zf_core/src/exception/exception.dart';
+import 'package:gzu_zf_core/src/index.dart';
 import 'package:gzu_zf_core/src/tools/html_tool.dart';
+import 'package:gzu_zf_core/src/tools/parser.dart';
 import 'package:gzu_zf_core/src/tools/train_img.dart';
-import 'package:html/parser.dart';
 import 'package:dio/dio.dart';
 import 'package:image/image.dart' as img;
 import 'package:fast_gbk/fast_gbk.dart';
 
 ///登录实现
 class LoginImpl {
-  final Dio client;
-
-  LoginImpl({required this.client});
+  final ZfImpl zfImpl;
+  LoginImpl({required this.zfImpl});
 
   ///throws [SchoolNetCannotAccess]
   ///throws [PasswordOrUsernameWrong]
   ///throws [NetNarrow]
   ///throws [CannotParse]
-  ///throws [LoginFailed]
   Future<Map<String, Map<String, String>>> login(
       String username, String password) async {
     try {
       var viewState = await questMain();
       var checkcode = await questCheckCode();
       return await doLogin(username, password, checkcode, viewState);
-    } catch (e) {
-      if (e is CheckCodeRecoginedError) {
-        Future.delayed(Duration(seconds: 4));
-        return await login(username, password);
-      } else if (e is DioException) {
-        throw SchoolNetCannotAccess();
-      } else {
-        rethrow;
-      }
+    } on CheckCodeRecoginedError {
+      Future.delayed(Duration(seconds: 4));
+      return await login(username, password);
     }
   }
 
   //step1
   //请求主页
   Future<String> questMain() async {
-    var response = await client.get('https://jw.gzu.edu.cn/',
+    var response = await zfImpl.client.get('https://jw.gzu.edu.cn/',
         options: Options(
-            responseType: ResponseType.bytes,
-            validateStatus: (code) {
-              return code == 200 || code == 429;
-            }));
-    if (response.statusCode == 429) {
-      throw NetNarrow();
-    }
-
-    String responseBody = gbk.decode(response.data);
-    var viewState = parse(responseBody)
-        .querySelector("#form1 > input[type=hidden]")
-        ?.attributes["value"];
-    if (viewState == null) throw SchoolNetCannotAccess();
+          responseType: ResponseType.bytes,
+        ));
+    var viewState =
+        Parser.viewStateParse(response.data, "#form1 > input[type=hidden]");
     return viewState;
   }
 
@@ -63,7 +47,7 @@ class LoginImpl {
   //请求验证码
   Future<String> questCheckCode() async {
     var trainImg = img.decodeImage(getImageUnit8());
-    if (trainImg == null) throw Exception("step2 cannot read tarinImage");
+    if (trainImg == null) throw CannotParse();
     var checkcodeImage =
         await downloadImage("https://jw.gzu.edu.cn/CheckCode.aspx");
     var image = await denose(checkcodeImage);
@@ -74,7 +58,7 @@ class LoginImpl {
   //step2.1
   //下载验证码图片
   Future<Uint8List> downloadImage(String url) async {
-    var response = await client.get(url,
+    var response = await zfImpl.client.get(url,
         options: Options(
             responseType: ResponseType.bytes,
             validateStatus: (code) => code == 200));
@@ -85,7 +69,7 @@ class LoginImpl {
   //验证码去噪
   Future<img.Image> denose(Uint8List imageData) async {
     img.Image? image = img.decodeImage(imageData);
-    if (image == null) throw Exception("step1.2 cannot get CheckCode image");
+    if (image == null) throw CannotParse();
     img.Image processedImage =
         img.Image(width: image.width, height: image.height);
     final targetColor = img.ColorRgba8(0, 0, 153, 255); // 0xff000099
@@ -209,21 +193,19 @@ class LoginImpl {
       'hidsc': '',
     };
 
-    var response = await client.post('https://jw.gzu.edu.cn/default2.aspx',
-        data: FormData.fromMap(formData),
-        options: Options(
-            responseType: ResponseType.bytes,
-            followRedirects: false,
-            validateStatus: (code) {
-              if (code == null) return false;
-              return code < 500;
-            }));
+    var response =
+        await zfImpl.client.post('https://jw.gzu.edu.cn/default2.aspx',
+            data: FormData.fromMap(formData),
+            options: Options(
+                responseType: ResponseType.bytes,
+                followRedirects: false,
+                validateStatus: (code) {
+                  if (code == null) return false;
+                  return code < 500;
+                }));
     if (response.statusCode != 302) {
       if (response.statusCode == 200) {
-        var resultText = parse(gbk.decode(response.data))
-            .querySelector("#form1 > script")
-            ?.innerHtml;
-        print(resultText);
+        var resultText = Parser.resultParse(response.data, "#form1 > script");
         if (resultText == null) {
           throw LoginFailed();
         }
@@ -233,14 +215,12 @@ class LoginImpl {
         }
         throw PasswordOrUsernameWrong();
       }
-      throw NetNarrow();
     }
-    var loginResponse = await client.get(
+
+    ///主页
+    var loginResponse = await zfImpl.client.get(
         "https://jw.gzu.edu.cn/xs_main.aspx?xh=$username",
         options: Options(responseType: ResponseType.bytes));
-    if (loginResponse.statusCode != 200) {
-      throw NetNarrow();
-    }
 
     var document = gbk.decode(loginResponse.data);
     try {

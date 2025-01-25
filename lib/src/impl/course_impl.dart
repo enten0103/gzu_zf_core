@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:fast_gbk/fast_gbk.dart';
-import 'package:gzu_zf_core/src/entity/course.dart';
-import 'package:gzu_zf_core/src/exception/error.dart';
+import 'package:gzu_zf_core/gzu_zf_core.dart';
+import 'package:gzu_zf_core/src/tools/parser.dart';
 import 'package:gzu_zf_core/src/tools/string_tool.dart';
 import 'package:html/parser.dart';
 
 ///对应页面“信息查询”->“选课查询”
 class CourseImpl {
-  final Dio client;
-  CourseImpl({required this.client});
+  final ZfImpl zfImpl;
+  CourseImpl({required this.zfImpl});
 
   Future<List<Course>> getAllSelectCourse(
       String url, String referer, String username) async {
@@ -32,28 +32,15 @@ class CourseImpl {
   }
 
   Future<String> firstQuest(String url, String referer) async {
-    final response = await client.get("https://jw.gzu.edu.cn/$url",
+    final response = await zfImpl.client.get("https://jw.gzu.edu.cn/$url",
         options: Options(
-            responseType: ResponseType.bytes,
-            headers: {
-              "sec-fetch-dest": "iframe",
-              "referer": "https://jw.gzu.edu.cn/$referer"
-            },
-            validateStatus: (code) {
-              return code == 200 || code == 429;
-            }));
-    if (response.statusCode == 429) {
-      throw NetNarrow();
-    }
-    final document = parse(gbk.decode(response.data));
-    try {
-      final element = document.querySelectorAll("#Form1 > input")[2];
-      var raw = element.attributes["value"];
-      if (raw == null) throw CannotParse();
-      return raw;
-    } catch (e) {
-      throw CannotParse();
-    }
+          responseType: ResponseType.bytes,
+          headers: {
+            "sec-fetch-dest": "iframe",
+            "referer": "https://jw.gzu.edu.cn/$referer"
+          },
+        ));
+    return Parser.viewStateParse(response.data, "#Form1 > input", 2);
   }
 
   Future<String> pageQuest(String? year, String? term, String? viewState,
@@ -66,29 +53,13 @@ class CourseImpl {
       'ddlXQ': term
     };
 
-    final response = await client.post("https://jw.gzu.edu.cn/$url",
-        options: Options(
-            responseType: ResponseType.bytes,
-            headers: {
-              "sec-fetch-dest": "iframe",
-              "referer": "https://jw.gzu.edu.cn/${encodeFullGbk(url)}"
-            },
-            validateStatus: (code) {
-              return code == 200 || code == 429;
-            }),
+    final response = await zfImpl.client.post("https://jw.gzu.edu.cn/$url",
+        options: Options(responseType: ResponseType.bytes, headers: {
+          "sec-fetch-dest": "iframe",
+          "referer": "https://jw.gzu.edu.cn/${encodeFullGbk(url)}"
+        }),
         data: FormData.fromMap(formData));
-    if (response.statusCode == 429) {
-      throw NetNarrow();
-    }
-    final document = parse(gbk.decode(response.data));
-    try {
-      final element = document.querySelectorAll("#Form1 > input")[2];
-      var raw = element.attributes["value"];
-      if (raw == null) throw CannotParse();
-      return raw;
-    } catch (e) {
-      return "";
-    }
+    return Parser.viewStateParse(response.data, "#Form1 > input", 2);
   }
 
   List<Course> rawparse(String raw) {
@@ -98,7 +69,7 @@ class CourseImpl {
     for (var i = 0; i < textSplited.length; i++) {
       var text = textSplited[i];
       int startIndex = text.indexOf('<');
-      int endIndex = text.indexOf(';', startIndex);
+      int endIndex = text.indexOf(';>', startIndex);
       if (startIndex != -1 && endIndex != -1) {
         // 提取尖括号之间的内容
         var result = text.substring(startIndex + 1, endIndex).trim();
@@ -106,13 +77,13 @@ class CourseImpl {
           result = (parse(result).body?.text ?? result);
         }
         var textResult = result.trim().replaceAll("\\", "");
-        if (textResult == '&nbsp') {
+        if (textResult == '&nbsp' || textResult == '&nbsp;') {
           textResult = "";
         }
         textlist.add(textResult);
         if (i % 24 == 9) {
           var tr = extractWeekHour(text).trim().replaceAll("\\", "");
-          if (tr == "e") {
+          if (tr == "e;") {
             textlist.add("");
           } else {
             textlist.add(tr);

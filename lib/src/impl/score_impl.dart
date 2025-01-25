@@ -1,16 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:fast_gbk/fast_gbk.dart';
-import 'package:gzu_zf_core/src/entity/account.dart';
-import 'package:gzu_zf_core/src/entity/score.dart';
-import 'package:gzu_zf_core/src/exception/error.dart';
-import 'package:html/parser.dart';
+import 'package:gzu_zf_core/gzu_zf_core.dart';
+import 'package:gzu_zf_core/src/tools/parser.dart';
 
 ///对应页面“信息查询”->“成绩查询”
 class ScoreImpl {
-  final Dio client;
+  final ZfImpl zfImpl;
 
-  ScoreImpl({required this.client});
+  ScoreImpl({required this.zfImpl});
 
   Future<Map<String, Object>> quryScorePage(String url, String referer) async {
     var viewState = await getViewState(url, referer);
@@ -19,22 +16,17 @@ class ScoreImpl {
   }
 
   Future<String> getViewState(String url, String referer) async {
-    final response = await client.get("https://jw.gzu.edu.cn/$url",
+    final response = await zfImpl.client.get("https://jw.gzu.edu.cn/$url",
         options: Options(responseType: ResponseType.bytes, headers: {
           "sec-fetch-dest": "iframe",
           "referer": "https://jw.gzu.edu.cn/$referer"
         }));
-    final document = parse(gbk.decode(response.data));
-    final element = document.querySelector("#Form1 > input[type=hidden]");
-    if (element == null) throw CannotParse();
-    var raw = element.attributes["value"];
-    if (raw == null) throw CannotParse();
-    return raw;
+    return Parser.viewStateParse(response.data, "#Form1 > input[type=hidden]");
   }
 
   Future<String> getRawData(
       String url, String referer, String viewState) async {
-    final response = await client.post("https://jw.gzu.edu.cn/$url",
+    final response = await zfImpl.client.post("https://jw.gzu.edu.cn/$url",
         data: FormData.fromMap({
           '__VIEWSTATE': viewState,
           'Button2': '%D4%DA%D0%A3%D1%A7%CF%B0%B3%C9%BC%A8%B2%E9%D1%AF'
@@ -43,11 +35,9 @@ class ScoreImpl {
           "sec-fetch-dest": "iframe",
           "referer": "https://jw.gzu.edu.cn/$referer"
         }));
-    final document = parse(gbk.decode(response.data));
-    final element = document.querySelector("#Form1 > input[type=hidden]");
-    if (element == null) throw CannotParse();
-    var raw = element.attributes["value"];
-    if (raw == null) throw CannotParse();
+
+    var raw =
+        Parser.viewStateParse(response.data, "#Form1 > input[type=hidden]");
     return utf8.decode(base64Decode(raw), allowMalformed: true);
   }
 
@@ -117,7 +107,6 @@ class ScoreImpl {
   List<List<T>> splitList<T>(List<T> list, int chunkSize) {
     List<List<T>> chunks = [];
     for (int i = 0; i < list.length; i += chunkSize) {
-      // 使用 sublist 方法提取子数组
       int end = (i + chunkSize < list.length) ? i + chunkSize : list.length;
       chunks.add(list.sublist(i, end));
     }
