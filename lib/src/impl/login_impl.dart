@@ -38,8 +38,7 @@ class LoginImpl {
         options: Options(
           responseType: ResponseType.bytes,
         ));
-    var viewState =
-        Parser.viewStateParse(response.data, "#form1 > input[type=hidden]");
+    var viewState = Parser.viewStateParse(response.data);
     return viewState;
   }
 
@@ -219,7 +218,7 @@ class LoginImpl {
 
     ///主页
     var loginResponse = await zfImpl.client.get(
-        "https://jw.gzu.edu.cn/xs_main.aspx?xh=$username",
+        "https://jw.gzu.edu.cn/${response.headers.map["location"]?[0]}",
         options: Options(responseType: ResponseType.bytes));
 
     var document = gbk.decode(loginResponse.data);

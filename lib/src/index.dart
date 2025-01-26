@@ -32,6 +32,7 @@ class ZfImpl {
     if (url == null || referer == null) {
       throw NoSuchNav();
     }
+
     var result = await scoreImpl.quryScorePage(url, referer);
     var accountInfo = result["accountInfo"] as Account;
     _sourceMap["scores"] = result["scoreRows"] as List<Score>;

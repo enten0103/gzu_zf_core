@@ -18,14 +18,12 @@ String extractATag(String htmlString) {
   // 查找最后一个 '<' 的位置
   int lastClosingBracketIndex = htmlString.lastIndexOf('<');
 
-  // 如果找到了这两个字符，提取它们之间的内容
   if (lastBracketIndex != -1 &&
       lastClosingBracketIndex != -1 &&
       lastBracketIndex < lastClosingBracketIndex) {
     return htmlString.substring(lastBracketIndex + 1, lastClosingBracketIndex);
   }
 
-  // 如果没有找到预期的格式，返回空字符串或者某种错误指示
   return htmlString;
 }
 

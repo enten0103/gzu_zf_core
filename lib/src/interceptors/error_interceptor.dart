@@ -5,7 +5,6 @@ class ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.type == DioExceptionType.connectionTimeout) {
-      print("to");
       handler.reject(
         DioException(
           requestOptions: err.requestOptions,

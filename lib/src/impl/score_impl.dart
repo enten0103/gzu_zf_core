@@ -21,7 +21,7 @@ class ScoreImpl {
           "sec-fetch-dest": "iframe",
           "referer": "https://jw.gzu.edu.cn/$referer"
         }));
-    return Parser.viewStateParse(response.data, "#Form1 > input[type=hidden]");
+    return Parser.viewStateParse(response.data);
   }
 
   Future<String> getRawData(
@@ -36,8 +36,7 @@ class ScoreImpl {
           "referer": "https://jw.gzu.edu.cn/$referer"
         }));
 
-    var raw =
-        Parser.viewStateParse(response.data, "#Form1 > input[type=hidden]");
+    var raw = Parser.viewStateParse(response.data);
     return utf8.decode(base64Decode(raw), allowMalformed: true);
   }
 

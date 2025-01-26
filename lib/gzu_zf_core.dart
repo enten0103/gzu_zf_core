@@ -1,5 +1,7 @@
 library;
 
+export 'package:dio/dio.dart' show DioException;
+
 export 'src/index.dart';
 
 ///entity

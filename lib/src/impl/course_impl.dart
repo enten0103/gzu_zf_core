@@ -40,7 +40,7 @@ class CourseImpl {
             "referer": "https://jw.gzu.edu.cn/$referer"
           },
         ));
-    return Parser.viewStateParse(response.data, "#Form1 > input", 2);
+    return Parser.viewStateParse(response.data);
   }
 
   Future<String> pageQuest(String? year, String? term, String? viewState,
@@ -59,7 +59,7 @@ class CourseImpl {
           "referer": "https://jw.gzu.edu.cn/${encodeFullGbk(url)}"
         }),
         data: FormData.fromMap(formData));
-    return Parser.viewStateParse(response.data, "#Form1 > input", 2);
+    return Parser.viewStateParse(response.data);
   }
 
   List<Course> rawparse(String raw) {
